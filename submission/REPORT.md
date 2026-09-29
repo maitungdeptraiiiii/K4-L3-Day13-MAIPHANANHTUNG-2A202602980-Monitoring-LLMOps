@@ -8,7 +8,7 @@
 - **MSSV:** 2A202602980
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/maitungdeptraiiiii/K4-L3-Day13-MAIPHANANHTUNG-2A202602980-Monitoring-LLMOps
-- **Commit SHA cuối:** _(điền sau khi commit cuối)_
+- **Commit SHA cuối:** `fa08df5444edebb366258b569cf5bf0053c6bfc1` (commit chứa toàn bộ source và evidence; commit sau đó chỉ ghi SHA này vào report)
 - **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1 _(xác nhận lại với file Lab Coach gửi)_
 
 ## 2. Evidence index
