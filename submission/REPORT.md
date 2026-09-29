@@ -63,7 +63,7 @@
 
 ## 6. Dashboard, SLO và alerts
 
-- **Dashboard và sáu panel:** `python scripts/dashboard.py` (stdlib + PyYAML) đọc `data/logs.jsonl` và `config/dashboard.yaml`, dựng đúng 6 panel, đơn vị, 60 phút, refresh 30 s, đường threshold. Ảnh: `evidence/11-dashboard-overview.png`.
+- **Dashboard và sáu panel:** `python scripts/dashboard.py` (stdlib + PyYAML) đọc `data/logs.jsonl` và `config/dashboard.yaml`, dựng đúng 6 panel, đơn vị, 60 phút, refresh 30 s, đường threshold. Ảnh: `evidence/11-dashboard-overview.png` (render từ `data/logs.jsonl` bằng `--at 2026-09-29T08:26:00Z` vì cửa sổ 60 phút tính từ thời điểm đó; ảnh `12-incident-metric.png` dùng `--only latency,traffic --mark-ms 2000`, đường cam "Challenge threshold 2000 ms" và dòng ghi chú là chú thích thêm, không thuộc contract).
 - **SLO và lý do chọn:** 99.5% request `response_sent` với latency ≤ 2000 ms trong 28 ngày; 2 s ≈ 1.3× baseline P95 (~1.5 s) và bằng `latency_threshold_ms` của challenge — xem `config/slo.yaml`. Bản nháp đầu dùng 3 s nhưng không bắt được sự cố 2.65 s nên đã siết lại. Đường threshold trên dashboard giữ 3000 ms theo contract `config/dashboard.yaml` (không được sửa), vì vậy panel latency vẫn hiện ✓ dù SLO 2 s bị vi phạm.
 - **Cách tính error budget:** 100% − 99.5% = 0.5% request (5 request xấu/ngày ở 1.000 request/ngày); request lỗi cũng là bad event.
 - **Ba alert và runbook tương ứng:** `high_latency_p95` (P2), `high_error_rate` (P1), `cost_per_request_spike` (P3) trong `config/alert_rules.yaml`; runbook `docs/alerts.md`.

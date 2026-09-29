@@ -85,9 +85,9 @@ def fmt(value: float) -> str:
     return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
-def line_chart(series, threshold, minutes: int, unit: str, y_min: float = 0.0) -> str:
+def line_chart(series, threshold, minutes: int, unit: str, y_min: float = 0.0, extra=None) -> str:
     """series: [(name, color, [(minutes_ago, value)])]; threshold: (value, label)."""
-    all_vals = [v for _, _, pts in series for _, v in pts] + [threshold[0]]
+    all_vals = [v for _, _, pts in series for _, v in pts] + [threshold[0]] + ([extra[0]] if extra else [])
     y_max = 4 * nice_max(max(all_vals) * 1.1 / 4)
     pw, ph = W - ML - MR, H - MT - MB
 
@@ -109,6 +109,10 @@ def line_chart(series, threshold, minutes: int, unit: str, y_min: float = 0.0) -
     ty = py(threshold[0])
     parts.append(f'<line class="thr" x1="{ML}" x2="{W - MR}" y1="{ty:.1f}" y2="{ty:.1f}"/>')
     parts.append(f'<text class="thr-label" x="{ML + 6}" y="{ty - 5:.1f}" text-anchor="start">{html.escape(threshold[1])}</text>')
+    if extra:  # optional annotation line, e.g. the challenge threshold (not part of the contract)
+        ey = py(extra[0])
+        parts.append(f'<line class="thr extra" x1="{ML}" x2="{W - MR}" y1="{ey:.1f}" y2="{ey:.1f}"/>')
+        parts.append(f'<text class="thr-label extra" x="{ML + 6}" y="{ey - 5:.1f}" text-anchor="start">{html.escape(extra[1])}</text>')
     for name, color, pts in series:
         pts = sorted(pts, key=lambda p: -p[0])  # oldest first
         if not pts:
@@ -175,7 +179,7 @@ def thr_label(threshold: dict, unit: str) -> str:
 
 
 # ---------------------------------------------------------------- panels
-def build_panels(cfg: dict, records: list[dict]) -> list[str]:
+def build_panels(cfg: dict, records: list[dict], only=None, mark_ms=None) -> list[str]:
     minutes = cfg["time_range_minutes"]
     panels = {p["id"]: p for p in cfg["panels"]}
     buckets = by_minute(records, minutes)
@@ -199,7 +203,10 @@ def build_panels(cfg: dict, records: list[dict]) -> list[str]:
         f'{status(passes(p95, p["threshold"]) if lat else None, f"P95 {p95:.0f} ms")}'
         f'<div class="kv">P50 {percentile(lat, 50):.0f} · P95 {p95:.0f} · P99 {percentile(lat, 99):.0f} · TTFT P95 {percentile(ttft, 95):.0f} ms</div>'
         + legend([(n, c) for n, c, _ in series])
-        + line_chart(series, (p["threshold"]["value"], thr_label(p["threshold"], "ms")), minutes, "ms")
+        + line_chart(
+            series, (p["threshold"]["value"], thr_label(p["threshold"], "ms")), minutes, "ms",
+            extra=(mark_ms, f"Challenge threshold {mark_ms} ms") if mark_ms else None,
+        )
     )
 
     # 2. traffic
@@ -283,6 +290,8 @@ def build_panels(cfg: dict, records: list[dict]) -> list[str]:
 
     cards = []
     for pid in ("latency", "traffic", "errors", "cost", "tokens", "quality"):
+        if only and pid not in only:
+            continue
         panel = panels[pid]
         cards.append(
             f'<section class="card"><h2>{html.escape(panel["title"])} <small>[{html.escape(panel["unit"])}]</small></h2>{out[pid]}</section>'
@@ -306,15 +315,15 @@ h2{font-size:15px;margin:0 0 6px}h2 small{color:var(--ink2);font-weight:400}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
 svg{width:100%;height:auto;display:block}.grid{stroke:var(--grid);stroke-width:1}
 .tick{fill:var(--ink2);font-size:11px}.thr{stroke:var(--ink2);stroke-width:1.5;stroke-dasharray:6 4}
-.thr-label{fill:var(--ink2);font-size:11px}.pt{stroke:var(--surface);stroke-width:2}
+.thr-label{fill:var(--ink2);font-size:11px}.thr.extra{stroke:var(--s2)}.thr-label.extra{fill:var(--ink);font-weight:600}.pt{stroke:var(--surface);stroke-width:2}
 """
 
 
-def render(refresh: int | None = 30) -> str:
+def render(refresh: int | None = 30, at: datetime | None = None, only=None, note: str | None = None, mark_ms: int | None = None) -> str:
     cfg = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))["dashboard"]
-    now = datetime.now(timezone.utc)
+    now = at or datetime.now(timezone.utc)
     records = load_records(now, cfg["time_range_minutes"])
-    cards = build_panels(cfg, records)
+    cards = build_panels(cfg, records, only=only, mark_ms=mark_ms)
     meta = f'<meta http-equiv="refresh" content="{refresh}">' if refresh else ""
     stamp = now.astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
     return (
@@ -322,8 +331,8 @@ def render(refresh: int | None = 30) -> str:
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'<title>{html.escape(cfg["title"])}</title><style>{CSS}</style></head><body>'
         f'<header><h1>{html.escape(cfg["title"])}</h1>'
-        f'<p>Project day13-k4-l3a-2A202602980 · time range: last {cfg["time_range_minutes"]} min · '
-        f'auto-refresh {refresh or 0}s · {len(records)} log records · rendered {stamp}</p></header>'
+        f'<p>Student MAIPHANANHTUNG 2A202602980 · time range: last {cfg["time_range_minutes"]} min · '
+        f'auto-refresh {refresh or 0}s · {len(records)} log records · {"window end" if at else "rendered"} {stamp}</p>{f"<p><strong>{html.escape(note)}</strong></p>" if note else ""}</header>'
         f'<main>{"".join(cards)}</main></body></html>'
     )
 
@@ -345,9 +354,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--html", type=Path, help="write a static snapshot instead of serving")
     parser.add_argument("--port", type=int, default=8501)
+    parser.add_argument("--at", help="window end as ISO time, e.g. 2026-09-29T08:30:00Z (default: now)")
+    parser.add_argument("--only", help="comma-separated panel ids to render, e.g. latency,traffic")
+    parser.add_argument("--note", help="caption shown under the header (annotation only)")
+    parser.add_argument("--mark-ms", type=int, help="draw an extra latency line, e.g. the challenge threshold")
     args = parser.parse_args()
     if args.html:
-        args.html.write_text(render(refresh=None), encoding="utf-8")
+        at = datetime.fromisoformat(args.at.replace("Z", "+00:00")) if args.at else None
+        only = set(args.only.split(",")) if args.only else None
+        args.html.write_text(render(None, at, only, args.note, args.mark_ms), encoding="utf-8")
         print(f"wrote {args.html}")
         return 0
     print(f"Dashboard on http://127.0.0.1:{args.port} (Ctrl+C to stop)")
