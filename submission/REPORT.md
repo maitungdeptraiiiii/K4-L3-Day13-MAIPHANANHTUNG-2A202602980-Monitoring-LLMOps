@@ -4,7 +4,7 @@
 
 ## 1. Thông tin học viên
 
-- **Họ và tên:** MAIPHANANHTUNG
+- **Họ và tên:** Mai Phan Anh Tùng
 - **MSSV:** 2A202602980
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/maitungdeptraiiiii/K4-L3-Day13-MAIPHANANHTUNG-2A202602980-Monitoring-LLMOps
