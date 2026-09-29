@@ -10,6 +10,7 @@
 - **Repository URL:** https://github.com/maitungdeptraiiiii/K4-L3-Day13-MAIPHANANHTUNG-2A202602980-Monitoring-LLMOps
 - **Commit SHA cuối:** e48cdd162cee2b7f2cad4b1d576cec0ff1cfc027
 - **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1
+- **Tên project Langfuse cá nhân:** day13-k4-l3a-2A202602980
 
 ## 2. Evidence index
 
