@@ -8,7 +8,7 @@
 - **MSSV:** 2A202602980
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/maitungdeptraiiiii/K4-L3-Day13-MAIPHANANHTUNG-2A202602980-Monitoring-LLMOps
-- **Commit SHA cuối:** là commit mới nhất của nhánh `main` trên remote tại thời điểm nộp (xem `git log -1` hoặc trang commits trên GitHub); SHA đã nộp trên LMS được ghi ở phần cuối báo cáo này. Một commit không thể chứa chính SHA của nó nên SHA cụ thể nằm ngoài file này.
+- **Commit SHA cuối:** 1b15faf
 - **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1
 
 ## 2. Evidence index
