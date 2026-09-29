@@ -8,12 +8,12 @@
 - **MSSV:** 2A202602980
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/maitungdeptraiiiii/K4-L3-Day13-MAIPHANANHTUNG-2A202602980-Monitoring-LLMOps
-- **Commit SHA cuối:** `fa08df5444edebb366258b569cf5bf0053c6bfc1` (commit chứa toàn bộ source và evidence; commit sau đó chỉ ghi SHA này vào report)
-- **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1 _(xác nhận lại với file Lab Coach gửi)_
+- **Commit SHA cuối:** là commit mới nhất của nhánh `main` trên remote tại thời điểm nộp (xem `git log -1` hoặc trang commits trên GitHub); SHA đã nộp trên LMS được ghi ở phần cuối báo cáo này. Một commit không thể chứa chính SHA của nó nên SHA cụ thể nằm ngoài file này.
+- **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1
 
 ## 2. Evidence index
 
-Điền đúng đường dẫn tới evidence thực tế. Có thể đổi tên hoặc dùng nhiều ảnh nếu cần.
+Đường dẫn tới evidence thực tế (tên file gốc theo gợi ý; ảnh 10b, 14 (txt) là bổ sung).
 
 | Evidence | Đường dẫn |
 |---|---|
@@ -39,10 +39,10 @@
 | `validate_logs.py` | 30/100 (`evidence/00-baseline.txt`) | 100/100 (`evidence/02-log-validator.txt`) | correlation ID, enrichment và PII đều đạt |
 | `validate_dashboard.py` | 6/6 | 6/6 | validator chỉ kiểm cấu trúc; dashboard runtime ở `evidence/11-dashboard-overview.png` |
 | `pytest` | 22 passed | 29 passed | thêm test PII (CCCD, thẻ, passport) và middleware |
-| Số traces hợp lệ | 0 child observation | 71 root trace (Langfuse Tracing, filter Is Root Observation = True; `evidence/06-trace-list.png`) | mỗi trace có AGENT → RETRIEVER + GENERATION |
+| Số traces hợp lệ | 0 trace có child observation | 71 root trace, trong đó 50 trace có đủ AGENT → RETRIEVER + GENERATION (`evidence/06-trace-list.png`: AGENT 71, GENERATION 50, RETRIEVER 50) | 21 trace đầu tạo lúc baseline/CP1, trước khi thêm instrumentation nên chỉ có root; tất cả đều do tôi tạo trong project cá nhân |
 | Số PII leak | 0 | 0 | validator độc lập không thấy PII trong `data/logs.jsonl` |
-| Latency P95 / TTFT P95 | _(chưa đo riêng)_ | ~1541 ms / 50 ms (concurrency 5) | xem dashboard |
-| Retrieval success rate | _(chưa đo)_ | 100% ở tải bình thường | panel Errors |
+| Latency P95 / TTFT P95 | _(chưa đo riêng ở baseline)_ | tải bình thường (concurrency 5, 41 request): P95 ≈ 1541 ms, TTFT P95 = 50 ms; challenge: P95 = 2652 ms, TTFT P95 = 50 ms | `evidence/11-dashboard-overview.png`, `evidence/12-incident-metric.png` |
+| Retrieval success rate | _(chưa đo ở baseline)_ | 100% (cả tải bình thường và challenge; incident `rag_slow` chỉ làm chậm, không gây lỗi) | panel Errors |
 
 ## 4. Logging và PII
 
@@ -59,7 +59,7 @@
 - **Version/label baseline:** v1, labels `baseline`, `production`
 - **Version/label candidate:** v2, label `candidate` (thêm câu "Answer concisely in at most three sentences.")
 - **Trace ID của mỗi version:** baseline v1 `cf52857d2695d6c9016778766502029b` (req-prompt-v1a); candidate v2 `db999ed2ef592f03e679993b8b22ccd1` (req-prompt-v2a); production→v2 `f90de1f8a8b427e9954b4c2b8d1d98f1` (req-prompt-prod-v2); rollback production→v1 `27f093250db965091aa86a3c6e87343b` (req-prompt-prod-v1b)
-- **Cách promote và rollback `production`:** `python scripts/manage_prompts.py promote 2` rồi `promote 1` (đổi label `production`, không sửa code); chạy lại cùng input để xác nhận version trong trace.
+- **Cách promote và rollback `production`:** `python scripts/manage_prompts.py promote 2` rồi `promote 1` (đổi label `production`, không sửa code); chạy lại cùng input để xác nhận version trong trace. Diễn biến: promote v2 → chạy `req-prompt-prod-v2` → rollback v1 → chạy `req-prompt-prod-v1b`. `evidence/10-prompt-rollback.png` chụp khi `production` ở v1; `evidence/10b-prompt-metrics-labels.png` chụp khi `production` đang ở v2 (trang Metrics); sau đó tôi rollback về v1 và xác nhận bằng `manage_prompts.py list`. Trạng thái cuối: `production` = v1.
 
 ## 6. Dashboard, SLO và alerts
 
@@ -72,9 +72,9 @@
 
 - **Challenge ID:** day13-k4-l3a-monitoring-llmops-v1
 - **Khoảng thời gian điều tra:** 2026-09-29 08:24:12Z – 08:24:25Z (15:24 giờ VN), 5 request `feature=monitoring`, concurrency 5
-- **Triệu chứng từ metrics:** panel Latency: `latency_ms` của cả 5 request = 2652 ms (P95 2652, vượt `latency_threshold_ms` 2000 của challenge và SLO 2 s) trong khi TTFT P95 chỉ 50 ms; error rate 0%, retrieval success 100%, cost/token/quality không đổi. Ảnh `evidence/12-incident-metric.png` (điểm ngoài cùng bên phải; điểm nhô lên ở khoảng −35 phút là lần practice của tôi). Cả 5 request chậm đều nhau nên đây là độ trễ cố định, không phải lỗi.
+- **Triệu chứng từ metrics:** panel Latency: `latency_ms` của cả 5 request = 2652 ms (P95 2652, vượt `latency_threshold_ms` 2000 của challenge và SLO 2 s) trong khi TTFT P95 chỉ 50 ms; error rate 0%, retrieval success 100%, cost/token/quality không đổi. Ảnh `evidence/12-incident-metric.png`: điểm 2652 ms sát bên phải là challenge (08:24Z); đỉnh khoảng −38 phút là lần practice `rag_slow` của tôi; điểm ~150 ms ngoài cùng là 2 request pytest (session `s1`) chạy sau đó. Cả 5 request đều 2652 ms nên đây là độ trễ cố định do một bước, không phải lỗi.
 - **Log line và correlation ID liên quan:** `req-aab7bc32` — `response_sent` `latency_ms=2652`, `ttft_ms=50`, `tool_success=true` (`evidence/13-incident-log.txt`).
-- **Trace ID và span gây ảnh hưởng:** trace `e66adda30ec4270927e00ef884567fac` (metadata `correlation_id=req-aab7bc32`): `lab-agent-run` 2.653 s = `rag-retrieve` 2.501 s + `llm-generate` 0.152 s (`evidence/14-incident-trace.txt`; thêm ảnh Langfuse nếu chụp được).
+- **Trace ID và span gây ảnh hưởng:** trace `e66adda30ec4270927e00ef884567fac` (metadata `correlation_id=req-aab7bc32`): `lab-agent-run` 2.653 s = `rag-retrieve` 2.501 s + `llm-generate` 0.152 s (ảnh `evidence/14-incident-trace.png`, tóm tắt `evidence/14-incident-trace.txt`; metadata chứa `correlation_id` ở `evidence/08-trace-metadata.png`).
 - **Root cause:** bước retrieval (`rag-retrieve`, `app/mock_rag.py` khi incident `rag_slow` bật) chiếm 2.5 s ≈ 94% thời gian request; LLM chỉ 0.15 s và TTFT bình thường 50 ms nên LLM không phải thủ phạm.
 - **Fix action:** tắt incident (`python scripts/inject_incident.py --disable`); trong thực tế: kiểm tra vector store/dependency, timeout + fallback không retrieval.
 - **Preventive measure:** alert `high_latency_p95` (P95 > 2000 ms trong 5 phút) kèm runbook chỉ tới span `rag-retrieve`; timeout ngắn cho retrieval; SLO 2 s (đã siết từ 3 s vì 3 s không bắt được sự cố này); span retrieval riêng để phân tách bottleneck.
@@ -87,13 +87,13 @@
 - **Cách hiểu luồng Metrics → Logs → Traces:** metrics cho biết có vấn đề và từ lúc nào (P95 2652 ms, TTFT vẫn 50 ms nên không phải LLM); logs cho biết request nào và cho `correlation_id` (`req-aab7bc32`); traces cùng ID cho biết bước nào chậm (`rag-retrieve` 2.5 s trên tổng 2.65 s). Mỗi lớp thu hẹp phạm vi cho lớp sau; `correlation_id` là khóa nối.
 - **Vai trò của prompt version, token/cost, SLO hoặc rollback trong vận hành LLM:** prompt version trong trace cho biết chính xác request dùng prompt nào; đổi label `production` (promote/rollback) không cần deploy code nên rollback nhanh; token/cost theo generation cho thấy request nào tốn kém; SLO và error budget biến "chậm" thành con số để quyết định khi nào dừng thay đổi.
 - **Điều quan trọng nhất đã học:** HTTP 200 chưa chắc là khỏe; ngưỡng SLO phải được kiểm chứng bằng chính sự cố thật (bản 3 s của tôi đã bỏ sót), và mọi telemetry phải scrub PII trước khi ghi.
-- **Hạn chế hoặc phần chưa hoàn thành, nếu có:** dashboard là script HTML tự viết (không phải Grafana/Streamlit), đường threshold latency giữ 3000 ms theo contract nên panel vẫn hiện ✓ khi incident 2.65 s; alert mới ở dạng cấu hình + runbook, chưa gắn hệ thống gửi Slack thật; chưa đo riêng retrieval success và P95 baseline trước khi sửa code; các trace prompt v1/v2 nằm chung project với trace practice (71 root trace).
+- **Hạn chế hoặc phần chưa hoàn thành, nếu có:** dashboard là script HTML tự viết (không phải Grafana/Streamlit), đường threshold latency giữ 3000 ms theo contract nên panel vẫn hiện ✓ khi incident 2.65 s; alert mới ở dạng cấu hình + runbook, chưa gắn hệ thống gửi Slack thật; chưa đo riêng retrieval success và P95 baseline trước khi sửa code; các trace prompt v1/v2 nằm chung project với trace practice (71 root trace); project Langfuse của tôi vẫn mang tên mặc định "My Project" thay vì `day13-k4-l3a-2A202602980` nên ảnh Langfuse không hiện tên project theo quy ước (trace vẫn thuộc project cá nhân của tôi, tạo bằng key của chính tôi); ảnh 08 đã che dòng `scope.attributes.public_key`.
 
 ## 9. Checklist trước khi nộp
 
-- [ ] Kết quả và evidence thuộc commit SHA cuối.
-- [ ] Tất cả ảnh/output mở được bằng đường dẫn tương đối.
-- [ ] Incident evidence nối đúng metric → log → trace.
-- [ ] Repository chạy lại được theo README.
-- [ ] Không có secret, API key, PII thô hoặc evidence của người khác/lớp khác.
+- [x] Kết quả và evidence thuộc commit SHA cuối.
+- [x] Tất cả ảnh/output mở được bằng đường dẫn tương đối.
+- [x] Incident evidence nối đúng metric → log → trace.
+- [x] Repository chạy lại được theo README.
+- [x] Không có secret, API key, PII thô hoặc evidence của người khác/lớp khác.
 - [ ] URL repo và commit SHA cuối đã được nộp trên LMS/Codelabs.
