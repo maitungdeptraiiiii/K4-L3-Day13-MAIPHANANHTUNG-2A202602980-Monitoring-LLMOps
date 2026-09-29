@@ -97,3 +97,7 @@
 - [x] Repository chạy lại được theo README.
 - [x] Không có secret, API key, PII thô hoặc evidence của người khác/lớp khác.
 - [ ] URL repo và commit SHA cuối đã được nộp trên LMS/Codelabs.
+
+---
+
+Commit chứa toàn bộ source, config và evidence được chấm: `a2406c3fd61c0ba18fcdf4ff5ced0af0772f08e1`. Commit ngay sau đó chỉ cập nhật dòng này; SHA nộp trên LMS là commit cuối của `main` (`git log -1`).
