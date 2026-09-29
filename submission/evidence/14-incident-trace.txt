@@ -1,0 +1,7 @@
+Langfuse project: day13-k4-l3a-2A202602980   (read via observations v2 API, 2026-09-29)
+trace_id: e66adda30ec4270927e00ef884567fac
+metadata.correlation_id: req-aab7bc32   (same ID as data/logs.jsonl lines in 13-incident-log.txt)
+
+AGENT      lab-agent-run  (root)   2.653 s
+  RETRIEVER  rag-retrieve (child)  2.501 s   <-- bottleneck (~94% of the request)
+  GENERATION llm-generate (child)  0.152 s   ttft_ms=50

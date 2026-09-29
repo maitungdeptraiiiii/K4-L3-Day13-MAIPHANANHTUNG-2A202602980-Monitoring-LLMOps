@@ -1,0 +1,11 @@
+Baseline (starter code, before CP1), run 2026-09-29:
+- pytest: 22 passed
+- validate_dashboard.py: HỢP LỆ: 6/6 panel có trong dashboard contract.
+- validate_logs.py:
+    Total log records analyzed: 21
+    Records with missing required fields: 20
+    Records with missing enrichment (context): 20
+    Unique correlation IDs found: 0
+    Potential PII leaks detected: 0
+    Estimated Score: 30/100
+- load_test.py: every response logged correlation_id "MISSING"

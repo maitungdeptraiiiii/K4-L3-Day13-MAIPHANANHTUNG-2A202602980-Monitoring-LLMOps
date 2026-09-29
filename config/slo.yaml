@@ -3,11 +3,20 @@ primary_slo:
   name: fast_successful_requests
   window: 28d
   sli:
-    good_event: 'event == "response_sent" and latency_ms <= 3000'
+    good_event: 'event == "response_sent" and latency_ms <= 2000'
     total_event: 'event == "request_received"'
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình.
+  # Why these numbers (baseline measured with scripts/load_test.py, concurrency 5, 41 requests):
+  #   normal P95 ~ 1.5 s and P99 ~ 1.6 s, so 2 s leaves ~30% headroom over normal load,
+  #   while rag_slow (+2.5 s in retrieval) pushes every request to ~2.65 s and burns budget. The official
+  #   challenge also uses latency_threshold_ms = 2000. (An earlier 3 s draft would NOT have flagged the
+  #   2.65 s incident, so it was tightened.)
+  #   A request that fails (request_failed) never emits response_sent, so it is also a "bad" event.
+  #   Error budget = 100% - 99.5% = 0.5% of requests. At 1,000 requests/day that is 5 bad requests per
+  #   day (140 per 28 days). Burning it 2x faster than plan (>1% bad in an hour) is the trigger to freeze
+  #   prompt/model changes and investigate, following Metrics -> Logs -> Traces.
+  note: Baseline P95 ~1.5 s; threshold 2 s = ~1.3x baseline P95; error budget 0.5% of requests per 28 days.
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5
